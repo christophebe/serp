@@ -11,7 +11,7 @@ $ npm install serp
 # Exemple
 
 ``` javascript
-var scraper = require('serp');
+var serp = require('serp');
 
 var options = {
   host : "google.be",
