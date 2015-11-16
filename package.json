@@ -16,5 +16,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "keywords": [
+    "google",
+    "search",
+    "scraper",
+    "SERP",
+    "SEO"
+  ]
 }
