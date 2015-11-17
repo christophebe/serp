@@ -1,6 +1,6 @@
 # serp
 
-This module allows to execute search on Goolge with or without proxies.
+This module allows to execute search on Google with or without proxies.
 
 # Installation
 
@@ -27,5 +27,6 @@ serp.search(options, function(error, links){
 ```
 
 For google.com, the param host is not necessary.
-qs can contains the usual Google search parameters : https://moz.com/ugc/the-ultimate-guide-to-the-google-search-parameters
-the options object can also contain all request options like proxy : https://github.com/request/request
+qs can contains the usual Google search parameters : https://moz.com/ugc/the-ultimate-guide-to-the-google-search-parameters.
+
+The options object can also contain all request options like proxy : https://github.com/request/request
