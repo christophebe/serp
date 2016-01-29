@@ -40,7 +40,7 @@ describe('test Search', function() {
 
         });
 
-        it.only('Should return 10 links with a specific host and extra parameters', function(done) {
+        it('Should return 10 links with a specific host and extra parameters', function(done) {
             this.timeout(100000);
             var options = {
               host : "google.be",
