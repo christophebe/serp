@@ -2,6 +2,28 @@ var url     = require('url');
 var request = require('request');
 var cheerio = require('cheerio');
 
+
+/**
+ * Extract links from a google SERP page
+ *
+ * @param The HTML body
+ * @return A list of links (String)
+ */
+function extractLinks(body) {
+  var results = [];
+  var $ = cheerio.load(body);
+
+  $('.g h3 a').each(function(i, elem) {
+    var parsed = url.parse(elem.attribs.href, true);
+    if (parsed.pathname === '/url') {
+      results.push(parsed.query.q);
+    }
+  });
+
+  return results;
+}
+
+
 /**
  *  Make a search based on a keyword on a google domain
  *
@@ -33,25 +55,11 @@ module.exports.search = function(options, callback) {
             return callback(error);
           }
 
-          if (response.statusCode != 200) {
+          if (response.statusCode !== 200) {
             return callback(new Error("Invalid HTTP code : " + response.statusCode));
           }
           var links = extractLinks(body);
           callback(null, links);
   });
 
-}
-
-function extractLinks(body) {
-  var results = [];
-  var $ = cheerio.load(body);
-
-  $('.g h3 a').each(function(i, elem) {
-    var parsed = url.parse(elem.attribs.href, true);
-    if (parsed.pathname === '/url') {
-      results.push(parsed.query.q);
-    }
-  });
-
-  return results;
-}
+};

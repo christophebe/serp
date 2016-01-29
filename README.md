@@ -8,7 +8,7 @@ This module allows to execute search on Google with or without proxies.
 $ npm install serp
 ```
 
-# Exemple
+# Code
 
 ``` javascript
 var serp = require('serp');
@@ -17,7 +17,7 @@ var options = {
   host : "google.be",
   qs : {
     q   : "test", // the keyword
-    num : 100
+    num : 100     //number of result 
   }
 };
 
