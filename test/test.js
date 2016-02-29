@@ -24,7 +24,7 @@ describe('Test Simple Search', function() {
         });
 
         it('Should return 12 links with a specific host and extra parameters', function(done) {
-
+            this.timeout(4000);
             var options = {
               host : "google.be",
               num : 12,

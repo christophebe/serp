@@ -30,7 +30,7 @@ serp.search(options, function(error, links){
 });
 ```
 
-**Understanding the options structure :**
+*Understanding the options structure :*
 - For google.com, the param host is not necessary.
 - qs can contains the usual Google search parameters : https://moz.com/ugc/the-ultimate-guide-to-the-google-search-parameters.
 - options.qs.q is the keyword
