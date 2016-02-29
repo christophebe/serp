@@ -2,10 +2,11 @@ var assert = require("assert");
 var serp   = require("../index.js");
 
 
-describe('test Search', function() {
+describe('Test Simple Search', function() {
 
 
         it('Should return 10 links with a minimal option set', function(done) {
+
             var options = {
               qs : {
                 q : "test"
@@ -13,40 +14,22 @@ describe('test Search', function() {
             };
 
             serp.search(options, function(error, links){
+
                   assert(! error);
                   assert(links.length===10);
-                  console.log(links);
+
                   done();
             });
 
         });
 
-        it('Should return 10 links with a specific host', function(done) {
+        it('Should return 12 links with a specific host and extra parameters', function(done) {
 
             var options = {
               host : "google.be",
+              num : 12,
               qs : {
-                q   : "crédit+hypothécaire",
-                num : 20
-              }
-            };
-
-            serp.search(options, function(error, links){
-                  assert(! error);
-                  assert(links.length === 20);
-                  console.log("simple search", links);
-                  done();
-            });
-
-        });
-
-        it('Should return 10 links with a specific host and extra parameters', function(done) {
-            this.timeout(100000);
-            var options = {
-              host : "google.be",
-              qs : {
-                q   : "prêt+personnel+rapide",
-                num : 20,
+                q   : "test",
                 pws : 0,
                 lr : "lang_fr"
                 //,
@@ -56,8 +39,8 @@ describe('test Search', function() {
 
             serp.search(options, function(error, links){
                   assert(! error);
-                  assert(links.length === 20);
-                  console.log(links);
+                  assert(links.length === 12);
+
                   done();
             });
 
