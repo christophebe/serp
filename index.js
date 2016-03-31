@@ -82,9 +82,9 @@ function httpRequest(options, links, callback) {
       options.proxy = options.proxyList.getProxy().getUrl();
     }
 
-    console.log("Google request : " + options.url + " - " + (options.proxy || "no proxy"));
+    //console.log("Google request : " + options.url + " - " + (options.proxy || "no proxy"));
     if (options.delay) {
-       console.log("Wait between request : " + options.delay);
+       //console.log("Wait between request : " + options.delay);
        setTimeout(execRequest, options.delay, options, links, callback);
     }
     else {

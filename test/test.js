@@ -6,7 +6,7 @@ describe('Test Simple Search', function() {
 
 
         it('Should return 10 links with a minimal option set', function(done) {
-
+            this.timeout(4000);
             var options = {
               qs : {
                 q : "test"

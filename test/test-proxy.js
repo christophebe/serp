@@ -3,7 +3,7 @@ var proxyLoader = require("simple-proxies/lib/proxyfileloader");
 var serp        = require("../index.js");
 
 
-describe.skip('Test Search with proxies', function() {
+describe('Test Search with proxies', function() {
 
         var proxyList = null;
 
@@ -35,8 +35,8 @@ describe.skip('Test Search with proxies', function() {
                     console.log(error);
                     done(false);
                   }
-                  console.log("Result.nbr", links.length);
-                  console.log("Result", links);
+                  //console.log("Result.nbr", links.length);
+                  //console.log("Result", links);
 
                   assert(links.length===78);
 
