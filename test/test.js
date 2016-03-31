@@ -47,7 +47,7 @@ describe('Test Simple Search', function() {
         });
 
 
-        it.only('Should return 13 links with delay between each requests', function(done) {
+        it('Should return 13 links with delay between each requests', function(done) {
             this.timeout(60000);
             var options = {
               delay : 2000,
