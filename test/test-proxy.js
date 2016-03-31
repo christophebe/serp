@@ -17,7 +17,7 @@ describe.skip('Test Search with proxies', function() {
         });
 
 
-        it('ProxyList', function(done) {
+        it('ProxyList Test', function(done) {
             this.timeout(100000);
             var options = {
               host : "google.com",

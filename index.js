@@ -83,42 +83,63 @@ function httpRequest(options, links, callback) {
     }
 
     console.log("Google request : " + options.url + " - " + (options.proxy || "no proxy"));
-    request(options, function(error, response, body) {
-            if (error) {
-              console.log("Request Error : " + error);
-              return callback(null, links);
-            }
+    if (options.delay) {
+       console.log("Wait between request : " + options.delay);
+       setTimeout(execRequest, options.delay, options, links, callback);
+    }
+    else {
+      execRequest(options, links, callback);
+    }
 
-            if (response.statusCode !== 200) {
-              console.log("Invalid HTTP code : " + response.statusCode);
-              return callback(null, links);
-            }
-            var extract = extractLinks(body);
-
-            if (extract.links.length === 0) {
-               return callback(null, links);
-            }
-
-            links = links.concat(extract.links);
-            
-            // We have all links
-            if (links.length >= options.num) {
-              return callback(null, _.first(links, options.num));
-            }
-
-            // We have not sufficiant links, get another google page
-            if (extract.nextPage) {
-                var nextPageOptions = _.pick(options, 'proxyList', 'host', 'num', 'headers', 'proxy');
-                nextPageOptions.url = getGoogleUrl(options, extract.nextPage);
-
-                //console.log("nextPageOptions", nextPageOptions);
-                return httpRequest(nextPageOptions, links, callback);
-            }
-
-            callback(null, links);
-    });
 
 }
+
+function execRequest(options, links, callback) {
+
+    request(options, function(error, response, body){
+          checkGoogleResponse(options, error, response, body, links, callback);
+    });
+}
+
+
+function checkGoogleResponse(options, error, response, body, links, callback) {
+
+        if (error) {
+          console.log("Request Error : " + error);
+          return callback(null, links);
+        }
+
+        if (response.statusCode !== 200) {
+          console.log("Invalid HTTP code : " + response.statusCode);
+          return callback(null, links);
+        }
+        var extract = extractLinks(body);
+
+        if (extract.links.length === 0) {
+           return callback(null, links);
+        }
+
+        links = links.concat(extract.links);
+
+        // We have all links
+        if (links.length >= options.num) {
+          //console.log("sufficiant number of links", links.length, options.num);
+          return callback(null, _.first(links, options.num));
+        }
+
+        // We have not sufficiant links, get another google page
+        if (extract.nextPage) {
+            var nextPageOptions = _.pick(options, 'proxyList', 'host', 'num', 'headers', 'proxy', 'delay');
+            nextPageOptions.url = getGoogleUrl(options, extract.nextPage);
+
+            //console.log("nextPageOptions", nextPageOptions);
+            return httpRequest(nextPageOptions, links, callback);
+        }
+
+
+        callback(null, links);
+}
+
 
 /**
  * Extract links from a google SERP page

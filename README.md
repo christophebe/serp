@@ -95,3 +95,25 @@ function loadSerp(proxyList) {
 }
 
 ```
+
+## Delay between requests
+
+It is possible to add a delay between each request made on Google with the option *delay* (value in ms).
+
+
+``` javascript
+var serp = require("serp");
+
+var options = {
+
+  qs : {
+    q : "test"
+  },
+  num : 1000,
+  delay : 2000 // in ms
+};
+
+serp.search(options, function(error, links){
+      console.log(links);
+});
+```
