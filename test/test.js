@@ -66,26 +66,4 @@ describe('Test Simple Search', function() {
 
         });
 
-
-        it('Should return 40 links for multiple keyword query', function(done) {
-            this.timeout(60000);
-            var options = {
-              delay : 2000,
-              num : 13,
-              qs : {
-                q   : "test"
-              }
-            };
-
-            serp.search(options, function(error, links){
-                  assert(! error);
-                  assert(links.length === 13);
-
-                  done();
-            });
-
-        });
-
-
-
 });

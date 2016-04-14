@@ -3,6 +3,7 @@ var async   = require('async');
 var request = require('request');
 var cheerio = require('cheerio');
 var _       = require('underscore');
+var log     = require("crawler-ninja-logger").Logger;
 
 
 var DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1';
@@ -63,6 +64,9 @@ function init(options, callback) {
       options.headers = (options.headers || {});
       options.headers["User-Agent"] = DEFAULT_USER_AGENT;
     }
+
+    options.jar = true;
+
     callback(null, options);
 }
 
@@ -76,15 +80,9 @@ function init(options, callback) {
  */
 function httpRequest(options, links, callback) {
 
-
-    // Proxy rotation
-    if(options.proxyList  && ! options.proxy ) {
-      options.proxy = options.proxyList.getProxy().getUrl();
-    }
-
     //console.log("Google request : " + options.url + " - " + (options.proxy || "no proxy"));
     if (options.delay) {
-       //console.log("Wait between request : " + options.delay);
+       logInfo("Wait before exec Google request : " + options.delay, options);
        setTimeout(execRequest, options.delay, options, links, callback);
     }
     else {
@@ -95,7 +93,7 @@ function httpRequest(options, links, callback) {
 }
 
 function execRequest(options, links, callback) {
-
+    logInfo("Exec Google request", options);
     request(options, function(error, response, body){
           checkGoogleResponse(options, error, response, body, links, callback);
     });
@@ -105,16 +103,15 @@ function execRequest(options, links, callback) {
 function checkGoogleResponse(options, error, response, body, links, callback) {
 
         if (error) {
-          console.log("Request Error : " + error);
+          logError("Error during Google request", options, error );
           return callback(null, links);
         }
 
         if (response.statusCode !== 200) {
-          console.log("Invalid HTTP code : " + response.statusCode);
+          logError("Invalid HTTP code from Goorl : " + response.statusCode, options);
           return callback(null, links);
         }
         var extract = extractLinks(body);
-
         if (extract.links.length === 0) {
            return callback(null, links);
         }
@@ -123,16 +120,15 @@ function checkGoogleResponse(options, error, response, body, links, callback) {
 
         // We have all links
         if (links.length >= options.num) {
-          //console.log("sufficiant number of links", links.length, options.num);
           return callback(null, _.first(links, options.num));
         }
 
         // We have not sufficiant links, get another google page
         if (extract.nextPage) {
-            var nextPageOptions = _.pick(options, 'proxyList', 'host', 'num', 'headers', 'proxy', 'delay');
+            var nextPageOptions = _.pick(options, 'host', 'num', 'headers', 'proxy', 'delay', 'jar');
+
             nextPageOptions.url = getGoogleUrl(options, extract.nextPage);
 
-            //console.log("nextPageOptions", nextPageOptions);
             return httpRequest(nextPageOptions, links, callback);
         }
 
@@ -180,6 +176,15 @@ function extractLinks(body) {
  */
 function getGoogleUrl(options, path) {
     return "https://www." + (options.host || "google.com") + path;
+}
+
+
+function logInfo(message, options) {
+  log.info({module : "serp", message : message, url : options.url, proxy : options.proxy, options});
+}
+
+function logError(message, options, error) {
+  log.error({module : "serp", message : message, url : options.url, proxy : options.proxy, error : error, options});
 }
 
 module.exports.search = search;
