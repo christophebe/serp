@@ -8,6 +8,10 @@
   },
   "homepage": "https://github.com/christophebe/serp",
   "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "pretest": "rm -rf ./logs"
+  },
   "dependencies": {
     "async": "*",
     "cheerio": "*",
