@@ -180,11 +180,11 @@ function getGoogleUrl(options, path) {
 
 
 function logInfo(message, options) {
-  log.info({module : "serp", message : message, url : options.url, proxy : options.proxy, options});
+  log.info({module : "serp", message : message, url : options.url, proxy : options.proxy, options : options});
 }
 
 function logError(message, options, error) {
-  log.error({module : "serp", message : message, url : options.url, proxy : options.proxy, error : error, options});
+  log.error({module : "serp", message : message, url : options.url, proxy : options.proxy, error : error, options : options});
 }
 
 module.exports.search = search;

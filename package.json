@@ -19,12 +19,17 @@
     "request": "*",
     "underscore": "*"
   },
+  "devDependencies": {
+    "mocha": "*",
+    "expect": "*"
+  },
   "author": "",
   "license": "ISC",
   "keywords": [
     "google",
     "search",
     "scraper",
+    "google scraper",
     "SERP",
     "SEO"
   ]
