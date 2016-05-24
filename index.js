@@ -8,6 +8,7 @@ var log     = require("crawler-ninja-logger").Logger;
 
 var DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1';
 var DEFAULT_NUM_RESULTS = 10;
+var DEFAULT_RETRY = 5;
 
 /**
  *  Make a search based on a keyword on a google domain
@@ -56,6 +57,7 @@ function init(options, callback) {
 
     options.url = getGoogleUrl(options, "/search");
     options.num = options.num || DEFAULT_NUM_RESULTS;
+    options.retry = options.retry || DEFAULT_RETRY;
 
     // Making request on Google without user agent => not a good idea
     var hasUserAgent = (options.headers || {})["User-Agent"];
@@ -63,6 +65,10 @@ function init(options, callback) {
     if ( ! hasUserAgent) {
       options.headers = (options.headers || {});
       options.headers["User-Agent"] = DEFAULT_USER_AGENT;
+    }
+
+    if (options.proxyList) {
+        options.proxy = options.proxyList.pick().getUrl();
     }
 
     options.jar = true;
@@ -92,11 +98,28 @@ function httpRequest(options, links, callback) {
 
 }
 
-function execRequest(options, links, callback) {
-    logInfo("Exec Google request", options);
-    request(options, function(error, response, body){
-          checkGoogleResponse(options, error, response, body, links, callback);
-    });
+function execRequest(options, links, endCallback) {
+
+    async.retry({times : options.retry, interval : options.delay},
+      function(callback, results){
+        logInfo("Exec Google request (or retry)", options);
+        request(options, function(error, response, body){
+
+              var taskError = error;
+              if (response && response.statusCode !== 200) {
+                taskError = new Error("Invalid HTTP status code");
+              }
+
+              if (taskError) {
+                logError("Error on Google request", options, error);
+                options.proxy = options.proxyList.pick().getUrl();
+              }
+              callback(taskError, {error : error, response : response, body : body});
+        });
+      },
+      function(error, result) {
+          checkGoogleResponse(options, result.error, result.response, result.body, links, endCallback);
+      });
 }
 
 
@@ -108,7 +131,7 @@ function checkGoogleResponse(options, error, response, body, links, callback) {
         }
 
         if (response.statusCode !== 200) {
-          logError("Invalid HTTP code from Goorl : " + response.statusCode, options);
+          logError("Invalid HTTP code from Google : " + response.statusCode, options);
           return callback(null, links);
         }
         var extract = extractLinks(body);
@@ -125,7 +148,7 @@ function checkGoogleResponse(options, error, response, body, links, callback) {
 
         // We have not sufficiant links, get another google page
         if (extract.nextPage) {
-            var nextPageOptions = _.pick(options, 'host', 'num', 'headers', 'proxy', 'delay', 'jar');
+            var nextPageOptions = _.pick(options, 'host', 'num', 'headers', 'proxy', 'delay', 'retry', 'jar', 'proxyList');
 
             nextPageOptions.url = getGoogleUrl(options, extract.nextPage);
 

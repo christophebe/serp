@@ -1,6 +1,6 @@
 {
   "name": "serp",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "",
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
   },
   "devDependencies": {
     "mocha": "*",
-    "expect": "*"
+    "expect": "*",
+    "simple-proxies" : "*"
   },
   "author": "",
   "license": "ISC",

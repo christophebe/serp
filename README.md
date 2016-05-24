@@ -41,7 +41,7 @@ serp.search(options, function(error, links){
 
 ## With proxy
 
-You need to add the proxy reference in the options
+You can add the proxy reference in the options
 
 ``` javascript
 var serp = require("serp");
@@ -58,6 +58,22 @@ serp.search(options, function(error, links){
 });
 ```
 
+You can also use the module simple proxy if you have several proxies (see : https://github.com/christophebe/simple-proxies).
+
+``` javascript
+var serp = require("serp");
+
+var options = {
+  qs : {
+    q : "test",
+  },
+  proxyList : proxyList
+};
+
+serp.search(options, function(error, links){
+      console.log(links);
+});
+```
 
 ## Delay between requests
 
@@ -74,6 +90,28 @@ var options = {
   },
   num : 1000,
   delay : 2000 // in ms
+};
+
+serp.search(options, function(error, links){
+      console.log(links);
+});
+```
+
+## Retry if error
+
+If an error occurs (timeout, network issue, invalid HTTP status, ...), it is possible to retry the same request on Google. If a proxyList is set into the options, another proxy will be used.
+
+``` javascript
+var serp = require("serp");
+
+var options = {
+
+  qs : {
+    q : "test"
+  },
+  num : 1000,
+  retry : 3,
+  proxyList : proxyList
 };
 
 serp.search(options, function(error, links){
