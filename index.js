@@ -118,12 +118,33 @@ function execRequest(options, links, endCallback) {
         });
       },
       function(error, result) {
-          checkGoogleResponse(options, result.error, result.response, result.body, links, endCallback);
+
+          if (options.numberOfResults) {
+              getNumberOfResults(options, result.error, result.response, result.body, endCallback);
+          }
+          else {
+              getLinks(options, result.error, result.response, result.body, links, endCallback);
+          }
+
       });
 }
 
+function getNumberOfResults(options, error, response, body, callback) {
+    if (error) {
+      logError("Error during Google request", options, error );
+      return callback(error);
+    }
 
-function checkGoogleResponse(options, error, response, body, links, callback) {
+    if (response.statusCode !== 200) {
+      logError("Invalid HTTP code from Google : " + response.statusCode, options);
+      return callback(new Error("Invalid HTTP code from Google : " + response.statusCode));
+    }
+
+    var $ = cheerio.load(body);
+    callback(null, $('#resultStats').text().split(" ")[1].replace(/\D/g,''));
+}
+
+function getLinks(options, error, response, body, links, callback) {
 
         if (error) {
           logError("Error during Google request", options, error );

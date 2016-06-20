@@ -24,6 +24,24 @@ describe.skip('Test Simple Search with proxy', function() {
 
         });
 
+        it('Should return the number of results', function(done) {
+            this.timeout(60000);
+            var options = {
+              host : "google.fr",
+              numberOfResults : true,
+              qs : {
+                q   : "site:elearning.u-pem.fr/"
+              },
+              proxyList : proxyList
+            };
+
+            serp.search(options, function(error, result){
+                  console.log(result);
+                  done(error);
+            });
+
+        });
+
         it('Should return 20 links with a proxy', function(done) {
             this.timeout(60000);
             var options = {

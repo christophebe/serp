@@ -1,7 +1,7 @@
 # serp
 
 This module allows to execute search on Google with or without proxies.
-It provides different options for scraping the google results.
+It provides different options for scraping the google results (either the list of the referenced sites or the number of results).
 
 # Installation
 
@@ -116,5 +116,28 @@ var options = {
 
 serp.search(options, function(error, links){
       console.log(links);
+});
+```
+
+## Get the number of results
+
+You can get the number of indexed pages in Google by using the following code.
+
+
+``` javascript
+var serp = require("serp");
+
+var options = {
+  host : "google.fr",
+  numberOfResults : true,
+  qs : {
+    q   : "site:yoursite.com"
+  },
+  proxyList : proxyList
+};
+
+serp.search(options, function(error, result){
+      console.log("Number of indexed pages", result);
+      done(error);
 });
 ```
