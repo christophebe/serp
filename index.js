@@ -141,7 +141,15 @@ function getNumberOfResults(options, error, response, body, callback) {
     }
 
     var $ = cheerio.load(body);
-    callback(null, $('#resultStats').text().split(" ")[1].replace(/\D/g,''));
+    var result = $('#resultStats').text().split(" ");
+    
+    // The text structure provided by Google is not always the same
+    if (result.length > 1) {
+      callback(null, $('#resultStats').text().split(" ")[1].replace(/\D/g,''));
+    }
+    else {
+      callback(null, $('#resultStats').text().split(" ")[0].replace(/\D/g,''));
+    }
 }
 
 function getLinks(options, error, response, body, links, callback) {
