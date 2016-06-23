@@ -142,7 +142,7 @@ function getNumberOfResults(options, error, response, body, callback) {
 
     var $ = cheerio.load(body);
     var result = $('#resultStats').text().split(" ");
-    
+
     // The text structure provided by Google is not always the same
     if (result.length > 1) {
       callback(null, $('#resultStats').text().split(" ")[1].replace(/\D/g,''));
@@ -205,10 +205,12 @@ function extractLinks(body) {
 
         var parsed = url.parse(elem.attribs.href, true);
         if (parsed.pathname === '/url') {
-          links.push(parsed.query.q);
+          //todo : try to find a good way to get the title
+          links.push({url : parsed.query.q, title : ""});
         }
         else {
-          links.push(elem.attribs.href);
+          //console.log(elem);
+          links.push({url : elem.attribs.href, title : $(elem).text()});
         }
 
     });

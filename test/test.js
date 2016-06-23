@@ -17,7 +17,7 @@ describe('Test Simple Search', function() {
 
                   assert(! error);
                   assert(links.length===10);
-
+                  //console.log(links);
                   done();
             });
 
