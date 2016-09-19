@@ -112,7 +112,10 @@ function execRequest(options, links, endCallback) {
 
               if (taskError) {
                 logError("Error on Google request", options, error);
-                options.proxy = options.proxyList.pick().getUrl();
+                if (options.proxyList) {
+                  options.proxy = options.proxyList.pick().getUrl();
+                }
+
               }
               callback(taskError, {error : error, response : response, body : body});
         });
