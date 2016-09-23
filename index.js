@@ -148,10 +148,10 @@ function getNumberOfResults(options, error, response, body, callback) {
 
     // The text structure provided by Google is not always the same
     if (result.length > 1) {
-      callback(null, $('#resultStats').text().split(" ")[1].replace(/\D/g,''));
+      callback(null, Number(result[1].replace(/\D/g,'')));
     }
     else {
-      callback(null, $('#resultStats').text().split(" ")[0].replace(/\D/g,''));
+      callback(null, Number(result[0].replace(/\D/g,'')));
     }
 }
 

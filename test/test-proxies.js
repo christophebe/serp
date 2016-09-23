@@ -3,7 +3,7 @@ var serp   = require("../index.js");
 var proxyLoader = require("simple-proxies/lib/proxyfileloader");
 
 
-describe.skip('Test Simple Search with proxy', function() {
+describe('Test Simple Search with proxy', function() {
         var proxyList = null;
 
         before(function(done) {
@@ -27,16 +27,16 @@ describe.skip('Test Simple Search with proxy', function() {
         it('Should return the number of results', function(done) {
             this.timeout(60000);
             var options = {
-              host : "google.fr",
+              host : "google.be",
               numberOfResults : true,
               qs : {
-                q   : "site:elearning.u-pem.fr/"
+                q   : "site:lesoir.be"
               },
               proxyList : proxyList
             };
 
             serp.search(options, function(error, result){
-                  console.log(result);
+                  //console.log(result);
                   done(error);
             });
 
