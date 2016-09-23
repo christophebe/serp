@@ -24,7 +24,26 @@ describe('Test Simple Search with proxy', function() {
 
         });
 
-        it('Should return the number of results', function(done) {
+        it('Should return 0 for number of results of a non indexed site', function(done) {
+            this.timeout(60000);
+            var options = {
+              host : "google.be",
+              numberOfResults : true,
+              qs : {
+                q   : "site:tootofffd.be"
+              },
+              proxyList : proxyList
+            };
+
+            serp.search(options, function(error, result){
+                  //console.log(result);
+                  assert(result===0);
+                  done(error);
+            });
+
+        });
+
+        it('Should return the  number of results >0 for a indexed site', function(done) {
             this.timeout(60000);
             var options = {
               host : "google.be",
@@ -37,10 +56,12 @@ describe('Test Simple Search with proxy', function() {
 
             serp.search(options, function(error, result){
                   //console.log(result);
+                  assert(result>0);
                   done(error);
             });
 
         });
+
 
         it('Should return 20 links with a proxy', function(done) {
             this.timeout(60000);
