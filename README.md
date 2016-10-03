@@ -3,6 +3,7 @@
 This module allows to execute search on Google with or without proxies.
 It provides different options for scraping the google results (either the list of the referenced sites or the number of results).
 
+
 # Installation
 
 ``` bash
