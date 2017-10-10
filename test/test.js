@@ -1,69 +1,89 @@
-var assert = require("assert");
-var serp   = require("../index.js");
+const should = require("chai").should();
+const serp = require("../index.js");
 
 
-describe('Test Simple Search', function() {
+describe("Test Simple Search", () => {
+  it("Should return 10 links with a minimal option set", function test() {
+    this.timeout(20000);
+    const options = {
+      qs: {
+        q: "test",
+      },
+    };
+
+    return serp.search(options)
+      .then(links => links.should.to.have.lengthOf(10))
+      .catch(error => console.log(error.should.not.be.null));
+  });
+
+  it("Should return 12 links with a specific host and extra parameters", function test() {
+    this.timeout(20000);
+    const options = {
+      host: "google.be",
+      num: 12,
+      qs: {
+        q: "test",
+        pws: 0,
+        lr: "lang_fr",
+        cr: "BE",
+      },
+    };
+
+    return serp.search(options)
+      .then(links => links.should.to.have.lengthOf(12))
+      .catch(error => console.log(error.should.not.be.null));
+  });
+
+  it("Should return 15 links with delay between each requests", function test() {
+    this.timeout(60000);
+    const options = {
+      host: "google.be",
+      num: 15,
+      delay: 5000,
+      qs: {
+        q: "test",
+        pws: 0,
+        lr: "lang_fr",
+        cr: "BE",
+      },
+    };
+
+    return serp.search(options)
+      .then(links => links.should.to.have.lengthOf(15))
+      .catch(error => console.log(error.should.not.be.null));
+  });
 
 
-        it('Should return 10 links with a minimal option set', function(done) {
-            this.timeout(4000);
-            var options = {
-              qs : {
-                q : "test"
-              }
-            };
+  it("Should return 0 for number of results of a non indexed site", function test() {
+    this.timeout(20000);
+    const options = {
+      host: "google.be",
+      numberOfResults: true,
+      qs: {
+        q: "site:objectifxxxssq-web.be",
+      },
+    };
 
-            serp.search(options, function(error, links){
+    return serp.search(options)
+      .then(num => num.should.to.be.an("number").to.equal(0))
+      .catch(error => console.log(error.should.not.be.null));
+  });
 
-                  assert(! error);
-                  assert(links.length===10);
-                  //console.log(links);
-                  done();
-            });
+  it("Should return a number > 0 for the number of results of an indexed site", function test() {
+    this.timeout(20000);
+    const options = {
+      host: "google.be",
+      numberOfResults: true,
+      qs: {
+        q: "site:lesoir.be",
+        pws: 0,
+        lr: "lang_fr",
+        cr: "BE",
+      },
+    };
 
-        });
-
-
-        it('Should return 12 links with a specific host and extra parameters', function(done) {
-            this.timeout(4000);
-            var options = {
-              host : "google.be",
-              num : 12,
-              qs : {
-                q   : "test",
-                pws : 0,
-                lr : "lang_fr",
-                cr : "BE"
-              }
-            };
-
-            serp.search(options, function(error, links){
-                  assert(! error);
-                  assert(links.length === 12);
-
-                  done();
-            });
-
-        });
-
-
-        it('Should return 13 links with delay between each requests', function(done) {
-            this.timeout(60000);
-            var options = {
-              delay : 2000,
-              num : 13,
-              qs : {
-                q   : "mac os"
-              }
-            };
-
-            serp.search(options, function(error, links){
-                  assert(! error);
-                  assert(links.length === 13);
-
-                  done();
-            });
-
-        });
-
+    return serp.search(options)
+      .then(num => num.should.to.be.an("number").above(0))
+      .catch(error => console.log(error.should.not.be.null));
+  });
 });

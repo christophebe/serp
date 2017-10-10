@@ -1,247 +1,253 @@
-var url     = require('url');
-var async   = require('async');
-var request = require('request');
-var cheerio = require('cheerio');
-var _       = require('underscore');
-var log     = require("crawler-ninja-logger").Logger;
+const util = require("util");
+const url = require("url");
 
+const delay = util.promisify(setTimeout);
+const request = require("request-promise-native");
+const cheerio = require("cheerio");
+// const _ = require("underscore");
 
-var DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1';
-var DEFAULT_NUM_RESULTS = 10;
-var DEFAULT_RETRY = 5;
+const log = require("crawler-ninja-logger").Logger;
+
+const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1";
+const DEFAULT_OPTIONS = {
+  num: 10,
+  retry: 3,
+  delay: 0,
+  resolveWithFullResponse: true,
+  jar: true,
+};
+
 
 /**
- *  Make a search based on a keyword on a google domain
- *
- * @param the options used to make the google search, based on the following structure :
- *  var options : {
- *      host : "google.be",  //the google host (eg : google.com, google.fr, ... - default : google.com)
- *      num  : 100, // number of result
- *      qs : {
- *        q : "keyword", // The keyword
- *        hl : "fr"      // the language (iso code), if not specify, the SERP can contains a mix
- *        //and all query parameters supported by Google : https://moz.com/ugc/the-ultimate-guide-to-the-google-search-parameters
- *      }
- *      // If needed, add all request options like proxy : https://github.com/request/request
- * }
- *
- *
- * @param callback(error, urls) url = an array of urls matching to the SERP
- */
-function search(options, callback) {
-
-  async.waterfall([
-      async.apply(init, options),
-      function(options, callback) {
-          httpRequest(options, [], callback);
-      }],
-      callback
-  );
+  *  Make a search based on a keyword on a google domain
+  *
+  * @param  {json} params  the options used to make the google search, based on the following structure :
+  * {
+  *      host : "google.be",  //the google host (eg : google.com, google.fr, ... - default : google.com)
+  *      num  : 100, // number of result
+  *      qs : {
+  *        q : "keyword", // The keyword
+  *        hl : "fr"      // the language (iso code), if not specify, the SERP can contains a mix
+  *        //and all query parameters supported by Google : https://moz.com/ugc/the-ultimate-guide-to-the-google-search-parameters
+  *      }
+  *      // If needed, add all request options like proxy : https://github.com/request/request
+  * }
+  * @return {array<string>} list of url that match to the Google SERP
+  */
+async function search(params) {
+  const options = check(params);
+  const result = await doRequest(options, 0);
+  if (Array.isArray(result)) {
+    return result.slice(0, options.num);
+  }
+  return result;
 }
 
 
 /**
- *  Check the search options
+ * check - Check is the search options are well defined & add default value
  *
- * @param the options to check
- * @callback(error, options)
+ * @param  {Json} params  The options to check
+ * @return {Json} a Json clone of the params with default values
  */
-function init(options, callback) {
-    if ( ! options.qs) {
-      return callback(new Error("No qs attribute in the options"));
-    }
+function check(params) {
+  if (!params.qs) {
+    throw new Error("No qs attribute in the options");
+  }
 
-    if ( ! options.qs.q ) {
-      return callback(new Error("the option object doesn't contain the keyword"));
-    }
+  if (!params.qs.q) {
+    throw new Error("the option object doesn't contain the keyword");
+  }
 
-    options.url = getGoogleUrl(options, "/search");
-    options.num = options.num || DEFAULT_NUM_RESULTS;
-    options.retry = options.retry || DEFAULT_RETRY;
+  const options = Object.assign({}, DEFAULT_OPTIONS, params);
+  options.url = getGoogleUrl(options, "/search");
 
-    // Making request on Google without user agent => not a good idea
-    var hasUserAgent = (options.headers || {})["User-Agent"];
+  // Making request on Google without user agent => not a good idea
+  const hasUserAgent = (options.headers || {})["User-Agent"];
 
-    if ( ! hasUserAgent) {
-      options.headers = (options.headers || {});
-      options.headers["User-Agent"] = DEFAULT_USER_AGENT;
-    }
+  if (!hasUserAgent) {
+    options.headers = (options.headers || {});
+    options.headers["User-Agent"] = DEFAULT_USER_AGENT;
+  }
 
-    if (options.proxyList) {
+  if (options.proxyList) {
+    options.proxy = options.proxyList.pick().getUrl();
+  }
+
+  return options;
+}
+
+
+/**
+ * tryRequest - Execute a Google request with some retries in the case of errors
+ *
+ * @param  {Json} options The search options
+ * @param {Number} nbrOfLinks the number of links already retrieved
+ * @return {Array<String>|Number} The list of url found in the SERP or the number of result
+ */
+async function doRequest(options, nbrOfLinks) {
+  let response = -1;
+  for (let i = 0; i < options.retry; i += 1) {
+    try {
+      /* eslint-disable no-await-in-loop */
+      response = await delay(options.delay).then(() => execRequest(options, nbrOfLinks));
+      break;
+    } catch (error) {
+      logError(`Error during the request, retry : ${i} - error : ${error}`);
+      if (options.proxyList) {
+        /* eslint-disable no-param-reassign */
         options.proxy = options.proxyList.pick().getUrl();
+      }
     }
+  }
 
-    options.jar = true;
-
-    callback(null, options);
+  if (response === -1) {
+    throw new Error(`Impossible to get result from ${options.url}`);
+  }
+  return response;
 }
 
+
 /**
- *  Execute a request on Google
- *  This function can called recursivly in order to get multiple google result pages
+ * execRequest - Execute a Google Request
  *
- * @param the search options
- * @param the already found links
- * @callback(error, links)
+ * @param  {Json} options The search options
+ * @param {Number} nbrOfLinks the number of links already retrieved
+ * @return {Array<String>|Number} The list of url found in the SERP or the number of result
  */
-function httpRequest(options, links, callback) {
+async function execRequest(options, nbrOfLinks) {
+  logInfo("execute request", options);
+  const response = await request(options);
+  // console.log("res", response);
 
-    //console.log("Google request : " + options.url + " - " + (options.proxy || "no proxy"));
-    if (options.delay) {
-       logInfo("Wait before exec Google request : " + options.delay, options);
-       setTimeout(execRequest, options.delay, options, links, callback);
-    }
-    else {
-      execRequest(options, links, callback);
-    }
-
-
-}
-
-function execRequest(options, links, endCallback) {
-
-    async.retry({times : options.retry, interval : options.delay},
-      function(callback, results){
-        logInfo("Exec Google request (or retry)", options);
-        request(options, function(error, response, body){
-
-              var taskError = error;
-              if (response && response.statusCode !== 200) {
-                taskError = new Error("Invalid HTTP status code");
-              }
-
-              if (taskError) {
-                logError("Error on Google request", options, error);
-                if (options.proxyList) {
-                  options.proxy = options.proxyList.pick().getUrl();
-                }
-
-              }
-              callback(taskError, {error : error, response : response, body : body});
-        });
-      },
-      function(error, result) {
-
-          if (options.numberOfResults) {
-              getNumberOfResults(options, result.error, result.response, result.body, endCallback);
-          }
-          else {
-              getLinks(options, result.error, result.response, result.body, links, endCallback);
-          }
-
-      });
-}
-
-function getNumberOfResults(options, error, response, body, callback) {
-    if (error) {
-      logError("Error during Google request", options, error );
-      return callback(error);
-    }
-
-    if (response.statusCode !== 200) {
-      logError("Invalid HTTP code from Google : " + response.statusCode, options);
-      return callback(new Error("Invalid HTTP code from Google : " + response.statusCode));
-    }
-
-    var $ = cheerio.load(body);
-    var result = $('#resultStats').text().split(" ");
-
-    // The text structure provided by Google is not always the same
-    if (result.length > 1) {
-      callback(null, Number(result[1].replace(/\D/g,'')));
-    }
-    else {
-      callback(null, Number(result[0].replace(/\D/g,'')));
-    }
-}
-
-function getLinks(options, error, response, body, links, callback) {
-
-        if (error) {
-          logError("Error during Google request", options, error );
-          return callback(null, links);
-        }
-
-        if (response.statusCode !== 200) {
-          logError("Invalid HTTP code from Google : " + response.statusCode, options);
-          return callback(null, links);
-        }
-        var extract = extractLinks(body);
-        if (extract.links.length === 0) {
-           return callback(null, links);
-        }
-
-        links = links.concat(extract.links);
-
-        // We have all links
-        if (links.length >= options.num) {
-          return callback(null, _.first(links, options.num));
-        }
-
-        // We have not sufficiant links, get another google page
-        if (extract.nextPage) {
-            var nextPageOptions = _.pick(options, 'host', 'num', 'headers', 'proxy', 'delay', 'retry', 'jar', 'proxyList');
-
-            nextPageOptions.url = getGoogleUrl(options, extract.nextPage);
-
-            return httpRequest(nextPageOptions, links, callback);
-        }
-
-
-        callback(null, links);
+  if (response && response.statusCode !== 200) {
+    throw new Error(`Invalid HTTP status code on ${options.url}`);
+  }
+  if (options.numberOfResults) {
+    return getNumberOfResults(options, response);
+  }
+  return getLinks(options, response, nbrOfLinks);
 }
 
 
 /**
- * Extract links from a google SERP page
+ * getNumberOfResults - Return the number of result found in Google
  *
- * @param The HTML body
- * @return A list of links (String)
+ * @param  {Json} options The search options
+ * @param  {Object} response The Http response
+ * @return {Number} The number of results
+ */
+function getNumberOfResults(options, response) {
+  logInfo("get number of results", options);
+  const $ = cheerio.load(response.body);
+  const result = $("#resultStats").text().split(" ");
+
+  if (result.length > 1) {
+    // Convert String with a format number into a number
+    return Number(result[1].replace(/\D/g, ""));
+  }
+
+  return 0;
+}
+
+
+/**
+  * getLinks - Get all URL(links) found in the top positions of the SERP
+  *
+  * @param {Json} options The search options
+  * @param {Object} response The Http response
+  * @param {Number} nbrOfLinks the number of links already retrieved
+  * @return {Array} The list of the links
+  */
+async function getLinks(options, response, nbrOfLinks) {
+  logInfo("get links", options);
+  const result = extractLinks(response.body);
+  let allLinks = result.links;
+  if (allLinks.length === 0) {
+    return allLinks;
+  }
+
+  const nbr = nbrOfLinks + allLinks.length;
+
+  if (nbr >= options.num) {
+    return allLinks;
+  }
+
+  if (result.nextPage) {
+    const nextPageOptions = Object.assign({}, options);
+    nextPageOptions.url = getGoogleUrl(options, result.nextPage);
+
+    allLinks = [...allLinks, ...await doRequest(nextPageOptions, nbr)];
+  }
+
+  return allLinks;
+}
+
+
+/**
+ * extractLinks - Get the links from the HTML body
+ *
+ * @param  {type} body th HTML body
+ * @return {Object} The list of the links & information about the next SERP page
  */
 function extractLinks(body) {
-    var links = [];
+  const links = [];
 
-    var $ = cheerio.load(body);
+  const $ = cheerio.load(body);
 
-    // Get the links matching to the web sites
-    $('.g h3 a').each(function(i, elem) {
+  // Get the links matching to the web sites
+  $(".g h3 a").each((i, elem) => {
+    const parsed = url.parse(elem.attribs.href, true);
+    if (parsed.pathname === "/url") {
+      // todo : try to find a good way to get the title
+      links.push({ url: parsed.query.q, title: "" });
+    } else {
+      // console.log(elem);
+      links.push({ url: elem.attribs.href, title: $(elem).text() });
+    }
+  });
 
-        var parsed = url.parse(elem.attribs.href, true);
-        if (parsed.pathname === '/url') {
-          //todo : try to find a good way to get the title
-          links.push({url : parsed.query.q, title : ""});
-        }
-        else {
-          //console.log(elem);
-          links.push({url : elem.attribs.href, title : $(elem).text()});
-        }
+  // Get the link used to access to the next google page for this result
+  const nextPage = $("#pnnext").attr("href");
 
-    });
-
-    // Get the link used to access to the next google page for this result
-    var nextPage = $("#pnnext").attr("href");
-
-    return {links : links, nextPage : nextPage};
+  return { links, nextPage };
 }
+
 
 /**
+ * getGoogleUrl - description
  *
- *  Build the Google url based on the options
- *
- * @param the options
- * @callback the relative google path
+ * @param  {type} options description
+ * @param  {type} path    description
+ * @return {type}         description
  */
 function getGoogleUrl(options, path) {
-    return "https://www." + (options.host || "google.com") + path;
+  return `https://www.${options.host || "google.com"}${path}`;
 }
 
 
+/**
+ * logInfo - description
+ *
+ * @param  {type} message description
+ * @param  {type} options description
+ * @return {type}         description
+ */
 function logInfo(message, options) {
-  log.info({module : "serp", message : message, url : options.url, proxy : options.proxy, options : options});
+  log.info({ module: "serp", message, url: options.url, proxy: options.proxy, options });
 }
 
+
+/**
+ * logError - description
+ *
+ * @param  {type} message description
+ * @param  {type} options description
+ * @param  {type} error   description
+ * @return {type}         description
+ */
 function logError(message, options, error) {
-  log.error({module : "serp", message : message, url : options.url, proxy : options.proxy, error : error, options : options});
+  log.error({ module: "serp", message, url: options.url, proxy: options.proxy, error, options });
 }
 
 module.exports.search = search;
