@@ -93,17 +93,18 @@ async function doRequest(options, nbrOfLinks) {
       response = await delay(options.delay).then(() => execRequest(options, nbrOfLinks));
       break;
     } catch (error) {
-      logError(`Error during the request, retry : ${i} - error : ${error}`);
+      logError(`Error during the request, retry : ${i}`, options, error);
       if (options.proxyList) {
         /* eslint-disable no-param-reassign */
         options.proxy = options.proxyList.pick().getUrl();
       }
+
+      if (i === options.retry - 1) {
+        throw error;
+      }
     }
   }
 
-  if (response === -1) {
-    throw new Error(`Impossible to get result from ${options.url}`);
-  }
   return response;
 }
 

@@ -34,7 +34,7 @@ describe("Test Simple Search", () => {
       .catch(error => console.log(error.should.not.be.null));
   });
 
-  it.only("Should return 15 links with delay between each requests", function test() {
+  it("Should return 15 links with delay between each requests", function test() {
     this.timeout(60000);
     const options = {
       host: "google.be",

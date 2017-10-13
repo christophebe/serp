@@ -3,7 +3,7 @@ const serp = require("../index.js");
 const proxyLoader = require("simple-proxies/lib/proxyfileloader");
 
 
-describe("Test Simple Search with proxy", () => {
+describe.skip("Test Simple Search with proxy", () => {
   let proxyList = null;
 
   before(function beforeTest(done) {
@@ -79,56 +79,3 @@ describe("Test Simple Search with proxy", () => {
       .catch(error => console.log(error.should.not.be.null));
   });
 });
-
-/*
-describe("Test Simple Search with proxy", () => {
-  const proxyList = null;
-
-  it("Should return the  number of results >0 for a indexed site", function (done) {
-    this.timeout(60000);
-    const options = {
-      host: "google.be",
-      numberOfResults: true,
-      qs: {
-        q: "site:lesoir.be",
-      },
-      proxyList,
-    };
-
-    serp.search(options, (error, result) => {
-      // console.log(result);
-      assert(result > 0);
-      done(error);
-    });
-  });
-
-
-  it("Should return 20 links with a proxy", function (done) {
-    this.timeout(60000);
-    const options = {
-      host: "google.be",
-      num: 20,
-      qs: {
-        q: "pret personnel rapide",
-        lr: "lang_fr",
-        cr: "BE",
-        pws: "0",
-      },
-      proxyList,
-    };
-
-    serp.search(options, (error, links) => {
-      if (error) {
-        console.log(error);
-      }
-      assert(! error);
-      assert(links.length === 20);
-      // console.log(links);
-
-      done();
-    });
-  });
-
-});
-
-*/
