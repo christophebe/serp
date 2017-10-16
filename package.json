@@ -1,6 +1,6 @@
 {
   "name": "serp",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "",
   "repository": {
     "type": "git",
@@ -15,7 +15,6 @@
   "dependencies": {
     "cheerio": "*",
     "crawler-ninja-logger": "*",
-    "request": "*",
     "request-promise-native": "^1.0.5"
   },
   "devDependencies": {

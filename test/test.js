@@ -13,7 +13,7 @@ describe("Test Simple Search", () => {
 
     return serp.search(options)
       .then(links => links.should.to.have.lengthOf(10))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 
   it("Should return 12 links with a specific host and extra parameters", function test() {
@@ -31,7 +31,7 @@ describe("Test Simple Search", () => {
 
     return serp.search(options)
       .then(links => links.should.to.have.lengthOf(12))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 
   it("Should return 15 links with delay between each requests", function test() {
@@ -50,7 +50,7 @@ describe("Test Simple Search", () => {
 
     return serp.search(options)
       .then(links => links.should.to.have.lengthOf(15))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 
 
@@ -66,7 +66,7 @@ describe("Test Simple Search", () => {
 
     return serp.search(options)
       .then(num => num.should.to.be.an("number").to.equal(0))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 
   it("Should return a number > 0 for the number of results of an indexed site", function test() {
@@ -84,6 +84,6 @@ describe("Test Simple Search", () => {
 
     return serp.search(options)
       .then(num => num.should.to.be.an("number").above(0))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 });

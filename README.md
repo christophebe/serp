@@ -23,12 +23,12 @@ var options = {
     filter : 0,
     pws : 0
   },
-  num : 1000
+  num : 100
 };
 
-serp.search(options, function(error, links){
-      console.log(links);
-});
+serp.search(options)
+  .then(links => console.log(links))
+  .catch(error => console.log(error));
 ```
 
 *Understanding the options structure :*
@@ -54,9 +54,9 @@ var options = {
   proxy : "http://username:password@host:port"  
 };
 
-serp.search(options, function(error, links){
-      console.log(links);
-});
+serp.search(options)
+  .then(links => console.log(links))
+  .catch(error => console.log(error));
 ```
 
 You can also use the module simple proxy if you have several proxies (see : https://github.com/christophebe/simple-proxies).
@@ -71,14 +71,15 @@ var options = {
   proxyList : proxyList
 };
 
-serp.search(options, function(error, links){
-      console.log(links);
-});
+serp.search(options)
+  .then(links => console.log(links))
+  .catch(error => console.log(error));
 ```
 
 ## Delay between requests
 
 It is possible to add a delay between each request made on Google with the option *delay* (value in ms).
+The delay is also applied when the tool read the next result page on Google.
 
 
 ``` javascript
@@ -89,13 +90,13 @@ var options = {
   qs : {
     q : "test"
   },
-  num : 1000,
+  num : 100,
   delay : 2000 // in ms
 };
 
-serp.search(options, function(error, links){
-      console.log(links);
-});
+serp.search(options)
+  .then(links => console.log(links))
+  .catch(error => console.log(error));
 ```
 
 ## Retry if error
@@ -110,14 +111,14 @@ var options = {
   qs : {
     q : "test"
   },
-  num : 1000,
+  num : 100,
   retry : 3,
   proxyList : proxyList
 };
 
-serp.search(options, function(error, links){
-      console.log(links);
-});
+serp.search(options)
+  .then(links => console.log(links))
+  .catch(error => console.log(error));
 ```
 
 ## Get the number of results
@@ -137,8 +138,7 @@ var options = {
   proxyList : proxyList
 };
 
-serp.search(options, function(error, result){
-      console.log("Number of indexed pages", result);
-      done(error);
-});
+serp.search(options)
+  .then(nbrOfResults => console.log(nbrOfResults))
+  .catch(error => console.log(error));
 ```
