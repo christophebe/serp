@@ -36,7 +36,7 @@ describe.skip("Test Simple Search with proxy", () => {
 
     return serp.search(options)
       .then(num => num.should.to.be.an("number").to.equal(0))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 
 
@@ -56,7 +56,7 @@ describe.skip("Test Simple Search with proxy", () => {
 
     return serp.search(options)
       .then(links => links.should.to.have.lengthOf(12))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 
   it("Should return 15 links with delay between each requests", function test() {
@@ -76,6 +76,6 @@ describe.skip("Test Simple Search with proxy", () => {
 
     return serp.search(options)
       .then(links => links.should.to.have.lengthOf(15))
-      .catch(error => console.log(error.should.not.be.null));
+      .catch(error => error.should.not.be.null);
   });
 });
