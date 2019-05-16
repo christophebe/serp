@@ -90,7 +90,8 @@ async function doRequest(options, nbrOfLinks) {
   for (let i = 0; i < options.retry; i += 1) {
     try {
       /* eslint-disable no-await-in-loop */
-      response = await delay(options.delay).then(() => execRequest(options, nbrOfLinks));
+      await delay(options.delay);
+      response = await execRequest(options, nbrOfLinks);
       break;
     } catch (error) {
       logError(`Error during the request, retry : ${i}`, options, error);
