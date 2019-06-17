@@ -3,7 +3,7 @@ const serp = require("../index.js");
 const proxyLoader = require("simple-proxies/lib/proxyfileloader");
 
 
-describe.skip("Test Simple Search with proxy", async () => {
+describe("Test Simple Search with proxy", async () => {
   let proxyList = null;
 
   before(async () => {
