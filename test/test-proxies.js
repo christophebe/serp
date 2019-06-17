@@ -1,83 +1,89 @@
-const assert = require("assert");
-const serp = require("../index.js");
-const proxyLoader = require("simple-proxies/lib/proxyfileloader");
+const { expect } = require('chai');
+const proxyLoader = require('simple-proxies/lib/proxyfileloader');
+const serp = require('../index.js');
 
-
-describe("Test Simple Search with proxy", async () => {
+describe.skip('Test Simple Search with proxy', async () => {
   let proxyList = null;
 
   before(async () => {
     try {
-      // this.timeout(100000);
-      console.log("Loading proxies ...");
+      console.log('Loading proxies ...');
       const config = proxyLoader.config()
-        .setProxyFile("./proxies.txt")
+        .setProxyFile('./proxies.txt')
         .setCheckProxies(false)
         .setRemoveInvalidProxies(false);
 
       proxyList = await proxyLoader.loadProxyFile(config);
-      console.log(`Proxies loaded : ${proxyList.getNumberOfProxies()}`);
+      console.log(`Proxies loaded : ${ proxyList.getNumberOfProxies() }`);
     } catch (e) {
       console.log(e);
     }
   });
 
-  it("Should return 0 for number of results of a non indexed site", async () => {
+  it('Should return 0 for number of results of a non indexed site', async () => {
     // this.timeout(60000);
     const options = {
-      host: "google.be",
+      host: 'google.be',
       numberOfResults: true,
       qs: {
-        q: "site:tootofffd.be",
+        q: 'site:tootofffd.be'
       },
-      proxyList,
+      proxyList
     };
 
-    // return serp.search(options)
-    //   .then(num => num.should.to.be.an("number").to.equal(0))
-    //   .catch(error => error.should.not.be.null);
-    await serp.search(options);
+    try {
+      const nbr = await serp.search(options);
+
+      expect(nbr).equals(0);
+    } catch (e) {
+      expect(e).be.null;
+    }
   });
 
-
-  it("Should return 12 links with a specific host and extra parameters", async () => {
+  it('Should return 12 links with a specific host and extra parameters', async () => {
     // this.timeout(20000);
     const options = {
-      host: "google.be",
+      host: 'google.be',
       num: 12,
       qs: {
-        q: "test",
+        q: 'test',
         pws: 0,
-        lr: "lang_fr",
-        cr: "BE",
+        lr: 'lang_fr',
+        cr: 'BE'
       },
-      proxyList,
+      proxyList
     };
 
-    // return serp.search(options)
-    //   .then(links => links.should.to.have.lengthOf(12))
-    //   .catch(error => error.should.not.be.null);
-    await serp.search(options);
+    try {
+      const links = await serp.search(options);
+
+      expect(links).to.have.lengthOf(12);
+    } catch (e) {
+      expect(e).be.null;
+    }
   });
 
-  it("Should return 15 links with delay between each requests", async () => {
+  it('Should return 15 links with delay between each requests', async () => {
     // this.timeout(60000);
     const options = {
-      host: "google.be",
+      host: 'google.be',
       num: 15,
       delay: 5000,
       qs: {
-        q: "test",
+        q: 'test',
         pws: 0,
-        lr: "lang_fr",
-        cr: "BE",
+        lr: 'lang_fr',
+        cr: 'BE'
       },
-      proxyList,
+      proxyList
     };
 
-    // return serp.search(options)
-    //   .then(links => links.should.to.have.lengthOf(15))
-    //   .catch(error => error.should.not.be.null);
-    await serp.search(options);
+    try {
+      const links = await serp.search(options);
+
+      expect(links).to.have.lengthOf(15);
+    } catch (e) {
+      expect(e).be.null;
+    }
   });
 });

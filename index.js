@@ -1,22 +1,19 @@
-const util = require("util");
-const url = require("url");
+const util = require('util');
+const url = require('url');
 
 const delay = util.promisify(setTimeout);
-const request = require("request-promise-native");
-const cheerio = require("cheerio");
-// const _ = require("underscore");
+const request = require('request-promise-native');
+const cheerio = require('cheerio');
+const log = require('crawler-ninja-logger').Logger;
 
-const log = require("crawler-ninja-logger").Logger;
-
-const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1";
+const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1';
 const DEFAULT_OPTIONS = {
   num: 10,
   retry: 3,
   delay: 0,
   resolveWithFullResponse: true,
-  jar: true,
+  jar: true
 };
-
 
 /**
   *  Make a search based on a keyword on a google domain
@@ -32,42 +29,44 @@ const DEFAULT_OPTIONS = {
   *      }
   *      // If needed, add all request options like proxy : https://github.com/request/request
   * }
-  * @return {array<string>} list of url that match to the Google SERP
+  * @returns {Array<string>} list of url that match to the Google SERP
   */
 async function search(params) {
   const options = check(params);
   const result = await doRequest(options, 0);
+
   if (Array.isArray(result)) {
     return result.slice(0, options.num);
   }
+
   return result;
 }
-
 
 /**
  * check - Check is the search options are well defined & add default value
  *
  * @param  {Json} params  The options to check
- * @return {Json} a Json clone of the params with default values
+ * @returns {Json} a Json clone of the params with default values
  */
 function check(params) {
   if (!params.qs) {
-    throw new Error("No qs attribute in the options");
+    throw new Error('No qs attribute in the options');
   }
 
   if (!params.qs.q) {
-    throw new Error("the option object doesn't contain the keyword");
+    throw new Error('the option object doesn\'t contain the keyword');
   }
 
   const options = Object.assign({}, DEFAULT_OPTIONS, params);
-  options.url = getGoogleUrl(options, "/search");
+
+  options.url = getGoogleUrl(options, '/search');
 
   // Making request on Google without user agent => not a good idea
-  const hasUserAgent = (options.headers || {})["User-Agent"];
+  const hasUserAgent = (options.headers || {})['User-Agent'];
 
   if (!hasUserAgent) {
-    options.headers = (options.headers || {});
-    options.headers["User-Agent"] = DEFAULT_USER_AGENT;
+    options.headers = options.headers || {};
+    options.headers['User-Agent'] = DEFAULT_USER_AGENT;
   }
 
   if (options.proxyList) {
@@ -77,16 +76,16 @@ function check(params) {
   return options;
 }
 
-
 /**
  * tryRequest - Execute a Google request with some retries in the case of errors
  *
  * @param  {Json} options The search options
- * @param {Number} nbrOfLinks the number of links already retrieved
- * @return {Array<String>|Number} The list of url found in the SERP or the number of result
+ * @param {number} nbrOfLinks the number of links already retrieved
+ * @returns {Array<string>|number} The list of url found in the SERP or the number of result
  */
 async function doRequest(options, nbrOfLinks) {
   let response = -1;
+
   for (let i = 0; i < options.retry; i += 1) {
     try {
       /* eslint-disable no-await-in-loop */
@@ -94,7 +93,8 @@ async function doRequest(options, nbrOfLinks) {
       response = await execRequest(options, nbrOfLinks);
       break;
     } catch (error) {
-      logError(`Error during the request, retry : ${i}`, options, error);
+      logError(`Error during the request, retry : ${ i }`, options, error);
+
       if (options.proxyList) {
         /* eslint-disable no-param-reassign */
         options.proxy = options.proxyList.pick().getUrl();
@@ -109,62 +109,74 @@ async function doRequest(options, nbrOfLinks) {
   return response;
 }
 
-
 /**
  * execRequest - Execute a Google Request
  *
  * @param  {Json} options The search options
- * @param {Number} nbrOfLinks the number of links already retrieved
- * @return {Array<String>|Number} The list of url found in the SERP or the number of result
+ * @param {number} nbrOfLinks the number of links already retrieved
+ * @returns {Array<string>|number} The list of url found in the SERP or the number of result
  */
 async function execRequest(options, nbrOfLinks) {
-  logInfo("execute request", options);
+  logInfo('execute request', options);
+
+  // If we want to get the number of results => force the interface language = EN
+  // Otherwise it becomes difficult to parse the html body
+  if (options.numberOfResults) {
+    options.qs.hl = 'EN';
+  }
+
   const response = await request(options);
-  // console.log("res", response);
 
   if (response && response.statusCode !== 200) {
-    throw new Error(`Invalid HTTP status code on ${options.url}`);
+    throw new Error(`Invalid HTTP status code on ${ options.url }`);
   }
   if (options.numberOfResults) {
     return getNumberOfResults(options, response);
   }
-  return getLinks(options, response, nbrOfLinks);
-}
 
+  return await getLinks(options, response, nbrOfLinks);
+}
 
 /**
  * getNumberOfResults - Return the number of result found in Google
  *
  * @param  {Json} options The search options
  * @param  {Object} response The Http response
- * @return {Number} The number of results
+ * @returns {number} The number of results
  */
 function getNumberOfResults(options, response) {
-  logInfo("get number of results", options);
+  logInfo('get number of results', options);
   const $ = cheerio.load(response.body);
-  const result = $("#resultStats").text().split(" ");
+
+  const hasNumberofResult = $('body').find('#resultStats').length > 0;
+
+  if (!hasNumberofResult) {
+    return 0;
+  }
+
+  const result = $('#resultStats').text().split(' ');
 
   if (result.length > 1) {
     // Convert String with a format number into a number
-    return Number(result[1].replace(/\D/g, ""));
+    return Number(result[1].replace(/\D/g, ''));
   }
 
   return 0;
 }
-
 
 /**
   * getLinks - Get all URL(links) found in the top positions of the SERP
   *
   * @param {Json} options The search options
   * @param {Object} response The Http response
-  * @param {Number} nbrOfLinks the number of links already retrieved
-  * @return {Array} The list of the links
+  * @param {number} nbrOfLinks the number of links already retrieved
+  * @returns {Array} The list of the links
   */
 async function getLinks(options, response, nbrOfLinks) {
-  logInfo("get links", options);
+  logInfo('get links', options);
   const result = extractLinks(response.body);
   let allLinks = result.links;
+
   if (allLinks.length === 0) {
     return allLinks;
   }
@@ -177,20 +189,20 @@ async function getLinks(options, response, nbrOfLinks) {
 
   if (result.nextPage) {
     const nextPageOptions = Object.assign({}, options);
+
     nextPageOptions.url = getGoogleUrl(options, result.nextPage);
 
-    allLinks = [...allLinks, ...await doRequest(nextPageOptions, nbr)];
+    allLinks = [ ...allLinks, ...await doRequest(nextPageOptions, nbr) ];
   }
 
   return allLinks;
 }
 
-
 /**
  * extractLinks - Get the links from the HTML body
  *
  * @param  {type} body th HTML body
- * @return {Object} The list of the links & information about the next SERP page
+ * @returns {Object} The list of the links & information about the next SERP page
  */
 function extractLinks(body) {
   const links = [];
@@ -198,47 +210,39 @@ function extractLinks(body) {
   const $ = cheerio.load(body);
 
   // Get the links matching to the web sites
-  $(".g h3 a").each((i, elem) => {
-    const parsed = url.parse(elem.attribs.href, true);
-    if (parsed.pathname === "/url") {
-      // todo : try to find a good way to get the title
-      links.push({ url: parsed.query.q, title: "" });
-    } else {
-      // console.log(elem);
-      links.push({ url: elem.attribs.href, title: $(elem).text() });
-    }
+  $('body').find('.srg h3').each((i, h3) => {
+    const href = $(h3).parent().attr('href');
+
+    links.push({ url: href, title: $(h3).text() });
   });
 
   // Get the link used to access to the next google page for this result
-  const nextPage = $("#pnnext").attr("href");
+  const nextPage = $('#pnnext').attr('href');
 
   return { links, nextPage };
 }
-
 
 /**
  * getGoogleUrl - description
  *
  * @param  {type} options description
  * @param  {type} path    description
- * @return {type}         description
+ * @returns {type}         description
  */
 function getGoogleUrl(options, path) {
-  return `https://www.${options.host || "google.com"}${path}`;
+  return `https://www.${ options.host || 'google.com' }${ path }`;
 }
-
 
 /**
  * logInfo - description
  *
  * @param  {type} message description
  * @param  {type} options description
- * @return {type}         description
+ * @returns {type}         description
  */
 function logInfo(message, options) {
-  log.info({ module: "serp", message, url: options.url, proxy: options.proxy, options });
+  log.info({ module: 'serp', message, url: options.url, proxy: options.proxy, options });
 }
-
 
 /**
  * logError - description
@@ -246,10 +250,10 @@ function logInfo(message, options) {
  * @param  {type} message description
  * @param  {type} options description
  * @param  {type} error   description
- * @return {type}         description
+ * @returns {type}         description
  */
 function logError(message, options, error) {
-  log.error({ module: "serp", message, url: options.url, proxy: options.proxy, error, options });
+  log.error({ module: 'serp', message, url: options.url, proxy: options.proxy, error, options });
 }
 
 module.exports.search = search;

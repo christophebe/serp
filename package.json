@@ -1,6 +1,6 @@
 {
   "name": "serp",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
   "homepage": "https://github.com/christophebe/serp",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha 'test/**/*.js' --timeout 20000",
     "pretest": "rm -rf ./logs"
   },
   "dependencies": {

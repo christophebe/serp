@@ -1,89 +1,125 @@
-const should = require("chai").should();
-const serp = require("../index.js");
+const { expect } = require('chai');
+const serp = require('../index.js');
 
-
-describe("Test Simple Search", () => {
-  it("Should return 10 links with a minimal option set", function test() {
-    this.timeout(20000);
+describe('Test Simple Search', async () => {
+  it('expect return 10 links with a minimal option set', async () => {
     const options = {
       qs: {
-        q: "test",
-      },
+        q: 'test'
+      }
     };
 
-    return serp.search(options)
-      .then(links => links.should.to.have.lengthOf(10))
-      .catch(error => error.should.not.be.null);
+    try {
+      const links = await serp.search(options);
+
+      expect(links).to.have.lengthOf(10);
+    } catch (e) {
+      console.log('Error', e);
+      expect(e).be.null;
+    }
   });
 
-  it("Should return 12 links with a specific host and extra parameters", function test() {
-    this.timeout(20000);
+  it('expect return 12 links with a specific host and extra parameters', async () => {
     const options = {
-      host: "google.be",
+      host: 'google.be',
       num: 12,
       qs: {
-        q: "test",
+        q: 'test',
         pws: 0,
-        lr: "lang_fr",
-        cr: "BE",
-      },
+        lr: 'lang_fr',
+        cr: 'BE'
+      }
     };
 
-    return serp.search(options)
-      .then(links => links.should.to.have.lengthOf(12))
-      .catch(error => error.should.not.be.null);
+    try {
+      const links = await serp.search(options);
+
+      expect(links).to.have.lengthOf(12);
+    } catch (e) {
+      expect(e).be.null;
+    }
   });
 
-  it("Should return 15 links with delay between each requests", function test() {
-    this.timeout(60000);
+  it('expect return 15 links with delay between each requests', async () => {
     const options = {
-      host: "google.be",
+      host: 'google.be',
       num: 15,
       delay: 5000,
       qs: {
-        q: "test",
+        q: 'test',
         pws: 0,
-        lr: "lang_fr",
-        cr: "BE",
-      },
+        lr: 'lang_fr',
+        cr: 'BE'
+      }
     };
 
-    return serp.search(options)
-      .then(links => links.should.to.have.lengthOf(15))
-      .catch(error => error.should.not.be.null);
+    try {
+      const links = await serp.search(options);
+
+      expect(links).to.have.lengthOf(15);
+    } catch (e) {
+      expect(e).be.null;
+    }
   });
 
-
-  it("Should return 0 for number of results of a non indexed site", function test() {
-    this.timeout(20000);
+  it('expect return 100 links within one request', async () => {
     const options = {
-      host: "google.be",
-      numberOfResults: true,
+      host: 'google.be',
+      num: 100,
       qs: {
-        q: "site:objectifxxxssq-web.be",
-      },
+        q: 'test',
+        pws: 0,
+        lr: 'lang_fr',
+        cr: 'BE',
+        num: 100
+      }
     };
 
-    return serp.search(options)
-      .then(num => num.should.to.be.an("number").to.equal(0))
-      .catch(error => error.should.not.be.null);
+    try {
+      const links = await serp.search(options);
+
+      expect(links).to.have.lengthOf(100);
+    } catch (e) {
+      expect(e).be.null;
+    }
   });
 
-  it("Should return a number > 0 for the number of results of an indexed site", function test() {
-    this.timeout(20000);
+  it('expect return 0 for number of results of a non indexed site', async () => {
     const options = {
-      host: "google.be",
+      host: 'google.be',
       numberOfResults: true,
       qs: {
-        q: "site:lesoir.be",
-        pws: 0,
-        lr: "lang_fr",
-        cr: "BE",
-      },
+        q: 'site:objectifxxxssq-web.be'
+      }
     };
 
-    return serp.search(options)
-      .then(num => num.should.to.be.an("number").above(0))
-      .catch(error => error.should.not.be.null);
+    try {
+      const nbr = await serp.search(options);
+
+      expect(nbr).equals(0);
+    } catch (e) {
+      expect(e).be.null;
+    }
+  });
+
+  it('expect return a number > 0 for the number of results of an indexed site', async () => {
+    const options = {
+      host: 'google.be',
+      numberOfResults: true,
+      qs: {
+        q: 'site:optpress.be',
+        pws: 0,
+        lr: 'lang_fr',
+        cr: 'BE'
+      }
+    };
+
+    try {
+      const num = await serp.search(options);
+
+      expect(num).to.be.an('number').above(0);
+    } catch (e) {
+      expect(e).be.null;
+    }
   });
 });

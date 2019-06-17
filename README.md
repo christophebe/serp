@@ -14,7 +14,7 @@ $ npm install serp -S
 # Simple usage
 
 ``` javascript
-var serp = require("serp");
+const serp = require("serp");
 
 var options = {
   host : "google.be",
@@ -26,9 +26,7 @@ var options = {
   num : 100
 };
 
-serp.search(options)
-  .then(links => console.log(links))
-  .catch(error => console.log(error));
+const links = await serp.search(options);
 ```
 
 *Understanding the options structure :*
@@ -45,7 +43,7 @@ serp.search(options)
 You can add the proxy reference in the options
 
 ``` javascript
-var serp = require("serp");
+const serp = require("serp");
 
 var options = {
   qs : {
@@ -54,15 +52,14 @@ var options = {
   proxy : "http://username:password@host:port"  
 };
 
-serp.search(options)
-  .then(links => console.log(links))
-  .catch(error => console.log(error));
+
+const links = await serp.search(options);
 ```
 
 You can also use the module simple proxy if you have several proxies (see : https://github.com/christophebe/simple-proxies).
 
 ``` javascript
-var serp = require("serp");
+const  serp = require("serp");
 
 var options = {
   qs : {
@@ -71,9 +68,7 @@ var options = {
   proxyList : proxyList
 };
 
-serp.search(options)
-  .then(links => console.log(links))
-  .catch(error => console.log(error));
+const links = await serp.search(options);
 ```
 
 ## Delay between requests
@@ -83,7 +78,7 @@ The delay is also applied when the tool read the next result page on Google.
 
 
 ``` javascript
-var serp = require("serp");
+const serp = require("serp");
 
 var options = {
 
@@ -94,9 +89,7 @@ var options = {
   delay : 2000 // in ms
 };
 
-serp.search(options)
-  .then(links => console.log(links))
-  .catch(error => console.log(error));
+const links = await serp.search(options);
 ```
 
 ## Retry if error
@@ -104,7 +97,7 @@ serp.search(options)
 If an error occurs (timeout, network issue, invalid HTTP status, ...), it is possible to retry the same request on Google. If a proxyList is set into the options, another proxy will be used.
 
 ``` javascript
-var serp = require("serp");
+const serp = require("serp");
 
 var options = {
 
@@ -116,9 +109,7 @@ var options = {
   proxyList : proxyList
 };
 
-serp.search(options)
-  .then(links => console.log(links))
-  .catch(error => console.log(error));
+const links = serp.search(options);
 ```
 
 ## Get the number of results
@@ -127,7 +118,7 @@ You can get the number of indexed pages in Google by using the following code.
 
 
 ``` javascript
-var serp = require("serp");
+const serp = require("serp");
 
 var options = {
   host : "google.fr",
@@ -138,7 +129,5 @@ var options = {
   proxyList : proxyList
 };
 
-serp.search(options)
-  .then(nbrOfResults => console.log(nbrOfResults))
-  .catch(error => console.log(error));
+const numberOfResults = await serp.search(options);
 ```
