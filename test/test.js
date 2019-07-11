@@ -107,7 +107,7 @@ describe('Test Simple Search', async () => {
       host: 'google.be',
       numberOfResults: true,
       qs: {
-        q: 'site:optpress.be',
+        q: 'site:lesoir.be',
         pws: 0,
         lr: 'lang_fr',
         cr: 'BE'
