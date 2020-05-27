@@ -1,10 +1,8 @@
 const util = require('util');
-const url = require('url');
-
-const delay = util.promisify(setTimeout);
 const request = require('request-promise-native');
 const cheerio = require('cheerio');
-const log = require('crawler-ninja-logger').Logger;
+
+const delay = util.promisify(setTimeout);
 
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1';
 const DEFAULT_OPTIONS = {
@@ -117,8 +115,6 @@ async function doRequest(options, nbrOfLinks) {
  * @returns {Array<string>|number} The list of url found in the SERP or the number of result
  */
 async function execRequest(options, nbrOfLinks) {
-  logInfo('execute request', options);
-
   // If we want to get the number of results => force the interface language = EN
   // Otherwise it becomes difficult to parse the html body
   if (options.numberOfResults) {
@@ -145,16 +141,15 @@ async function execRequest(options, nbrOfLinks) {
  * @returns {number} The number of results
  */
 function getNumberOfResults(options, response) {
-  logInfo('get number of results', options);
   const $ = cheerio.load(response.body);
 
-  const hasNumberofResult = $('body').find('#resultStats').length > 0;
+  const hasNumberofResult = $('body').find('#result-stats').length > 0;
 
   if (!hasNumberofResult) {
     return 0;
   }
 
-  const result = $('#resultStats').text().split(' ');
+  const result = $('#result-stats').text().split(' ');
 
   if (result.length > 1) {
     // Convert String with a format number into a number
@@ -173,7 +168,6 @@ function getNumberOfResults(options, response) {
   * @returns {Array} The list of the links
   */
 async function getLinks(options, response, nbrOfLinks) {
-  logInfo('get links', options);
   const result = extractLinks(response.body);
   let allLinks = result.links;
 
@@ -210,10 +204,16 @@ function extractLinks(body) {
   const $ = cheerio.load(body);
 
   // Get the links matching to the web sites
-  $('body').find('.srg h3').each((i, h3) => {
-    const href = $(h3).parent().attr('href');
+  // Update May 2020 : search only the h3. Google changes its CSS name
+  // $('body').find('.srg h3').each((i, h3) => {
+  $('body').find('h3').each((i, h3) => {
+    if ($(h3).parent()) {
+      const href = $(h3).parent().attr('href');
 
-    links.push({ url: href, title: $(h3).text() });
+      if (href) {
+        links.push({ url: href, title: $(h3).text() });
+      }
+    }
   });
 
   // Get the link used to access to the next google page for this result
@@ -234,26 +234,14 @@ function getGoogleUrl(options, path) {
 }
 
 /**
- * logInfo - description
- *
- * @param  {type} message description
- * @param  {type} options description
- * @returns {type}         description
- */
-function logInfo(message, options) {
-  log.info({ module: 'serp', message, url: options.url, proxy: options.proxy, options });
-}
-
-/**
  * logError - description
  *
  * @param  {type} message description
  * @param  {type} options description
  * @param  {type} error   description
- * @returns {type}         description
  */
 function logError(message, options, error) {
-  log.error({ module: 'serp', message, url: options.url, proxy: options.proxy, error, options });
+  console.error({ module: 'serp', message, url: options.url, proxy: options.proxy, error, options });
 }
 
 module.exports.search = search;

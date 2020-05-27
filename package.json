@@ -1,6 +1,6 @@
 {
   "name": "serp",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "",
   "repository": {
     "type": "git",
@@ -14,17 +14,16 @@
   },
   "dependencies": {
     "cheerio": "^0.22.0",
-    "crawler-ninja-logger": "*",
-    "request-promise-native": "^1.0.7"
+    "request-promise-native": "^1.0.8"
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^6.0.1",
-    "eslint-config-adidas-es8": "^1.1.0",
-    "eslint-plugin-import": "^2.18.0",
+    "eslint": "^7.1.0",
+    "eslint-config-adidas-es8": "^1.2.0",
+    "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-promise": "^4.2.1",
-    "mocha": "^6.1.4",
-    "simple-proxies": "^1.0.0"
+    "mocha": "^7.2.0",
+    "simple-proxies": "^1.0.3"
   },
   "author": "",
   "license": "ISC",

@@ -12,6 +12,8 @@ describe('Test Simple Search', async () => {
     try {
       const links = await serp.search(options);
 
+      console.log(links);
+
       expect(links).to.have.lengthOf(10);
     } catch (e) {
       console.log('Error', e);
@@ -77,6 +79,8 @@ describe('Test Simple Search', async () => {
 
     try {
       const links = await serp.search(options);
+
+      console.log(links);
 
       expect(links).to.have.lengthOf(100);
     } catch (e) {
