@@ -168,7 +168,7 @@ function getNumberOfResults(options, response) {
   * @returns {Array} The list of the links
   */
 async function getLinks(options, response, nbrOfLinks) {
-  const result = extractLinks(response.body);
+  const result = extractLinks(options, response.body);
   let allLinks = result.links;
 
   if (allLinks.length === 0) {
@@ -195,13 +195,23 @@ async function getLinks(options, response, nbrOfLinks) {
 /**
  * extractLinks - Get the links from the HTML body
  *
+ * @param {Json} options The search options
  * @param  {type} body th HTML body
  * @returns {Object} The list of the links & information about the next SERP page
  */
-function extractLinks(body) {
+function extractLinks(options, body) {
   const links = [];
 
   const $ = cheerio.load(body);
+
+  // if exactQuery option is present then
+  // check if the result is exactly for the provided query
+  // if it is for some modified/suggested query, return empty array
+  if (options.exactQuery) {
+    let query = options.qs.q;
+    let a = $(`div:contains(No results found for ${query})`).text().includes(`No results found for ${query}`);
+    if (a) return { links };
+  }
 
   // Get the links matching to the web sites
   // Update May 2020 : search only the h3. Google changes its CSS name
