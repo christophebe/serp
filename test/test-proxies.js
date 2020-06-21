@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const proxyLoader = require('simple-proxies/lib/proxyfileloader');
 const serp = require('../index.js');
 
-describe.skip('Test Simple Search with proxy', async () => {
+describe('Test Simple Search with proxy', async () => {
   let proxyList = null;
 
   before(async () => {

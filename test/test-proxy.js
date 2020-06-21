@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const serp = require('../index.js');
 
-describe.skip('Test Simple Search', async () => {
+describe('Test Simple Search', async () => {
   it('expect return 10 links with a minimal option set', async () => {
     const options = {
       qs: {
