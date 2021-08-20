@@ -1,21 +1,19 @@
 const util = require('util');
-const { url } = require('inspector');
-const request = require('request-promise-native');
+const { chromium } = require('playwright');
 const cheerio = require('cheerio');
 
 const delay = util.promisify(setTimeout);
-
-const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1';
-const HTTP_OK = 200;
 
 const SEARCH = '/search';
 
 const DEFAULT_OPTIONS = {
   num: 10,
-  retry: 3,
+  retry: 5,
   delay: 0,
-  resolveWithFullResponse: true,
-  jar: true
+  headless: false,
+
+  // request can be slow if a scrape API is used.
+  timeout: 60000
 };
 
 /**
@@ -30,19 +28,23 @@ const DEFAULT_OPTIONS = {
   *        hl : "fr"      // the language (iso code), if not specify, the SERP can contains a mix
   *        //and all query parameters supported by Google : https://moz.com/ugc/the-ultimate-guide-to-the-google-search-parameters
   *      }
-  *      // If needed, add all request options like proxy, ... : https://github.com/request/request
   * }
   * @returns {Array<string>} list of url that match to the Google SERP
   */
 async function search(params) {
-  const options = buildOptions(params);
-  const result = await doRequest(options);
+  const options = await buildOptions(params);
 
-  if (Array.isArray(result)) {
-    return result.slice(0, options.num);
+  try {
+    const result = await doRequest(options);
+
+    if (Array.isArray(result)) {
+      return result.slice(0, options.num);
+    }
+
+    return result;
+  } finally {
+    await options.browser.close();
   }
-
-  return result;
 }
 
 /**
@@ -51,7 +53,7 @@ async function search(params) {
  * @param  {Json} params  The params to check
  * @returns {Json} a Json clone of the params with default values
  */
-function buildOptions(params) {
+async function buildOptions(params) {
   if (!params.qs) {
     throw new Error('No qs attribute in the options');
   }
@@ -62,25 +64,11 @@ function buildOptions(params) {
 
   const options = Object.assign({}, DEFAULT_OPTIONS, params);
 
-  // options.url = getGoogleUrl(params, SEARCH);
-
-  // Making request on Google without user agent => not a good idea
-  const hasUserAgent = (options.headers || {})['User-Agent'];
-
-  if (!hasUserAgent) {
-    options.headers = options.headers || {};
-    options.headers['User-Agent'] = DEFAULT_USER_AGENT;
-  }
-
-  if (options.proxyList) {
-    options.proxy = options.proxyList.pick().getUrl();
-  }
-
-  // If we want to get the number of results => force the interface language = EN
-  // Otherwise it becomes difficult to parse the html body
   if (options.numberOfResults) {
     options.qs.hl = 'EN';
   }
+
+  options.browser = await chromium.launch({ headless: options.headless });
 
   return options;
 }
@@ -102,11 +90,6 @@ async function doRequest(options, nbrOfLinks = 0) {
       response = await execRequest(options, nbrOfLinks);
       break;
     } catch (error) {
-      if (options.proxyList) {
-        /* eslint-disable no-param-reassign */
-        options.proxy = options.proxyList.pick().getUrl();
-      }
-
       if (i === options.retry - 1) {
         throw error;
       }
@@ -117,34 +100,81 @@ async function doRequest(options, nbrOfLinks = 0) {
 }
 
 /**
- * Execute a Google Request
+ * Execute a Google Request with the help of playwright in order to accept the cookie consent
  *
  * @param  {Json} options The search options
  * @param {number} nbrOfLinks the number of links already retrieved
  * @returns {Array<string>|number} The list of url found in the SERP or the number of result
  */
 async function execRequest(options, nbrOfLinks) {
-  const response = await request(buildUrl(options), options);
+  const content = await requestFromBrowser(buildUrl(options), options);
 
-  if (response && response.statusCode !== HTTP_OK) {
+  if (options.numberOfResults) {
+    return getNumberOfResults(content);
+  }
+
+  return await getLinks(options, content, nbrOfLinks);
+}
+
+async function requestFromBrowser(url, options) {
+  const page = await newPage(options);
+
+  const response = await page.goto(url);
+
+  if (response && !response.ok()) {
     throw new Error(`Invalid HTTP status code on ${ options.url }`);
   }
-  if (options.numberOfResults) {
-    return getNumberOfResults(options, response);
+
+  // If the cookie consent button exist on the page, click on it
+  const consentButton = await page.$('//div[text()=\'I agree\']');
+
+  if (consentButton) {
+    await consentButton.click();
   }
 
-  return await getLinks(options, response, nbrOfLinks);
+  return await page.content();
+}
+
+async function newPage(options) {
+  const contextOptions = {};
+
+  if (options.proxy) {
+    contextOptions.proxy = options.proxy;
+  }
+
+  if (options.proxyList) {
+    contextOptions.proxy = pickNewProxy(options);
+  }
+
+  const context = await options.browser.newContext(contextOptions);
+  const page = await context.newPage();
+
+  return page;
+}
+
+function pickNewProxy(options) {
+  if (!options.proxyList) {
+    throw new Error('There is no proxy list in the options');
+  }
+
+  const p = options.proxyList.pick();
+
+  return {
+    server: `http://${ p.host }:${ p.port }`,
+    username: p.userName,
+    password: p.password
+
+  };
 }
 
 /**
  * Return the number of result found in Google
  *
- * @param  {Json} options The search options
- * @param  {Object} response The Http response
+ * @param  {Object} content The Http body content
  * @returns {number} The number of results
  */
-function getNumberOfResults(options, response) {
-  const $ = cheerio.load(response.body);
+function getNumberOfResults(content) {
+  const $ = cheerio.load(content);
 
   const hasNumberofResult = $('body').find('#result-stats').length > 0;
 
@@ -166,12 +196,12 @@ function getNumberOfResults(options, response) {
   * Get all URL(links) found in the top positions of the SERP
   *
   * @param {Json} options The search options
-  * @param {Object} response The Http response
+  * @param {Object} content The html content
   * @param {number} nbrOfLinks the number of links already retrieved
   * @returns {Array} The list of the links
   */
-async function getLinks(options, response, nbrOfLinks) {
-  const result = extractLinks(response.body);
+async function getLinks(options, content, nbrOfLinks) {
+  const result = extractLinks(content);
   let allLinks = result.links;
 
   if (allLinks.length === 0) {

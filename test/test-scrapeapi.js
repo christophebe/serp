@@ -1,9 +1,9 @@
 const { expect } = require('chai');
 const serp = require('../index.js');
 
-const accessKey = 'xxxx';
+const accessKey = 'xxx';
 
-describe.only('Test Search via a scrape api', async () => {
+describe('Test Search via a scrape api', async () => {
   it('expect return 10 links with a minimal option set', async () => {
     const options = {
       num: 10,
@@ -29,7 +29,7 @@ describe.only('Test Search via a scrape api', async () => {
       host: 'google.be',
       num: 20,
       qs: {
-        q: 'test',
+        q: 'camping car',
         pws: 0,
         lr: 'lang_fr',
         cr: 'BE'

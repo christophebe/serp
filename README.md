@@ -7,6 +7,7 @@ It provides different options for scraping the google results called SERP (Searc
 - retry if error 
 - with or without proxy, proxies or scrape API. 
 
+This module uses Playwright in order to accept the cookie consent popup before making a new search. 
 
 # Installation
 
@@ -21,7 +22,7 @@ $ npm install serp -S
 const serp = require("serp");
 
 var options = {
-  host : "google.be",
+  host : "google.fr",
   qs : {
     q : "test",
     filter : 0,
@@ -38,8 +39,6 @@ const links = await serp.search(options);
 - qs can contain the usual Google search parameters : https://moz.com/ugc/the-ultimate-guide-to-the-google-search-parameters.
 - options.qs.q is the keyword
 - num is the number of desired results (defaut is 10).
-- The options object can also contain all request options like http headers, ... . SERP is using the request module :  https://github.com/request/request
-- The user agent is not mandatory. Default value will be : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1'
 
 ## Delay between requests
 
@@ -115,7 +114,12 @@ var options = {
   qs : {
     q : "test",
   },
-  proxy : "http://username:password@host:port"  
+  proxy : {
+        server: 'hots:port',
+        username: 'username',
+        password: 'password'
+  }
+  
 };
 
 
@@ -183,3 +187,5 @@ It is therefore recommended to use proxies. The SERP module supports two solutio
 It all depends on what you are looking for. Datacenter proxies will provide the best performance and are generally very reliable. You can use the "retry" option to guarantee even more reliability. It's also a solution that offers a good quality/price ratio but it will require more effort in terms of development, especially for the rotation of proxies. If you want to use rotation with datacenter proxies, see [this unit test](https://github.com/christophebe/serp/blob/master/test/test-proxies.js).
 
 Although slower, the scrape APIs offer other features such as the geolocation of IP addresses over a larger number of countries and the ability to scrape dynamic pages. Using such an API can also simplify the code. Unfortunately, this solution is often more expensive than data center proxies. So, scrape APIs becomes interesting if you have other scrape needs. 
+
+In all cases, make a test with [shared proxies](https://mexela.com/aff.php?aff=191) in order to check it is suffisiant for your use cases.Those proxies are really cheap. 

@@ -1,7 +1,7 @@
 {
   "name": "serp",
-  "version": "2.1.0",
-  "description": "",
+  "version": "2.2.0",
+  "description": "Scraper for Google search pages based on keywords and other parameters like localisation",
   "repository": {
     "type": "git",
     "url": "https://github.com/christophebe/serp.git"
@@ -14,14 +14,15 @@
   },
   "dependencies": {
     "cheerio": "^0.22.0",
-    "request-promise-native": "^1.0.8"
+    "playwright": "^1.14.0",
+    "request-promise-native": "^1.0.9"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "eslint": "^7.1.0",
-    "eslint-config-adidas-es8": "^1.2.0",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-promise": "^4.2.1",
+    "chai": "^4.3.4",
+    "eslint": "^7.32.0",
+    "eslint-config-adidas-es8": "^1.3.1",
+    "eslint-plugin-import": "^2.24.0",
+    "eslint-plugin-promise": "^4.3.1",
     "mocha": "^7.2.0",
     "simple-proxies": "^1.0.3"
   },
