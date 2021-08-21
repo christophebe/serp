@@ -1,6 +1,6 @@
 {
   "name": "serp",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Scraper for Google search pages based on keywords and other parameters like localisation",
   "repository": {
     "type": "git",

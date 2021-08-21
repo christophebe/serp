@@ -10,7 +10,7 @@ const DEFAULT_OPTIONS = {
   num: 10,
   retry: 5,
   delay: 0,
-  headless: false,
+  headless: true,
 
   // request can be slow if a scrape API is used.
   timeout: 60000

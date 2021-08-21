@@ -10,8 +10,8 @@ describe('Test Simple Search with proxy', async () => {
       console.log('Loading proxies ...');
       const config = proxyLoader.config()
         .setProxyFile('./proxies.txt')
-        .setCheckProxies(false)
-        .setRemoveInvalidProxies(false);
+        .setCheckProxies(true)
+        .setRemoveInvalidProxies(true);
 
       proxyList = await proxyLoader.loadProxyFile(config);
       console.log(`Proxies loaded : ${ proxyList.getNumberOfProxies() }`);
