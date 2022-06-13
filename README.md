@@ -133,6 +133,7 @@ In this case, a different proxies (choose randomly) will be used of each *serp.s
 
 
 See [this unit test](https://github.com/christophebe/serp/blob/master/test/test-proxies.js) to get the complete code. 
+The proxies have to be in a txt file : one line for each proxy with the following structure : host:port:user:password
 
 ``` javascript
 const  serp = require("serp");
