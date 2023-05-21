@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.11",
-    "playwright": "^1.22.2",
+    "playwright": "^1.33.0",
     "request-promise-native": "^1.0.9"
   },
   "devDependencies": {
